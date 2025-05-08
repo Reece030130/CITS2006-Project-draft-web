@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository contains the back-end API for the CITS2006 project, implemented in Node.js with a MySQL database. It exposes RESTful endpoints to support the front-end application and handles data persistence, authentication, and business logic.
+This repository provides security enhancement modules for web applications. It is not a general web development project; instead, it focuses on improving authentication, data protection, and best practices to harden web services.
 
 ## Features
 
@@ -104,4 +104,3 @@ If you don’t have Node.js installed, download it from the official site:
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
-
