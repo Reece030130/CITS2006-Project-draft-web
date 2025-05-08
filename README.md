@@ -1,4 +1,4 @@
 # CITS2006-Project-draft-web
-java back-end web
-mysql -u root -p
-Str0ng!Passw0rd
+# node.js back-end web
+# Database setting mysql -u root -p
+# User password: Str0ng!Passw0rd
