@@ -32,28 +32,22 @@
         <p>We pride ourselves in providing a friendly experience, competitive price, excellent workmanship, personalised service, all with a 12 month warranty on labour and new parts.</p>
         <h3>About Us</h3>
         <p>V-Dub Repairs &amp; Spares is located in Fremantle, near bus and train services and several cafés just a short stroll away – enjoy beautiful Fremantle while you wait.</p>
-        <div class="image-container-under-intro" id="image-container-under-intro">
-            <section>
-                <img src="image/sub1.jpg" alt="V-Dub Repairs" class="intro-image">
-              </section>
-              <section>
-                <img src="image/sub2.jpg" alt="V-Dub Repairs" class="intro-image">
-              </section><section>
-                <img src="image/sub3.jpg" alt="V-Dub Repairs" class="intro-image">
-              </section>
-          </div>
-
-    </section>
+        <div class="image-container-under-intro">
+          <img src="image/sub1.jpg" alt="V-Dub Repairs" class="intro-image">
+          <img src="image/sub2.jpg" alt="V-Dub Repairs" class="intro-image">
+          <img src="image/sub3.jpg" alt="V-Dub Repairs" class="intro-image">
+        </div>
+      </section>
       
-        
       <!-- Booking Form on the right -->
       <div class="booking-container">
         <section id="booking" class="booking-form">
           <h2>Book a Service</h2>
-          <form action="/book" method="post">
+          <form action="/book" method="post" novalidate>
             <div class="form-group">
               <label for="name">Name *</label>
-              <input type="text" id="name" name="name" required>
+              <input type="text" id="name" name="name"
+                     required minlength="2" maxlength="100">
             </div>
             <div class="form-group">
               <label for="email">Email *</label>
@@ -61,11 +55,12 @@
             </div>
             <div class="form-group">
               <label for="company">Company</label>
-              <input type="text" id="company" name="company">
+              <input type="text" id="company" name="company" maxlength="200">
             </div>
             <div class="form-group">
               <label for="phone">Phone / Mobile *</label>
-              <input type="tel" id="phone" name="phone" required>
+              <input type="tel" id="phone" name="phone" required
+                     pattern="[0-9+\-\s]{7,20}">
             </div>
             <fieldset>
               <legend>Service or Repair *</legend>
@@ -80,29 +75,31 @@
             </fieldset>
             <div class="form-group">
               <label for="message">Message</label>
-              <textarea id="message" name="message" rows="4"></textarea>
+              <textarea id="message" name="message" rows="4" maxlength="500"></textarea>
             </div>
             <div class="form-group">
               <label for="plate">Licence Plate *</label>
-              <input type="text" id="plate" name="plate" required>
+              <input type="text" id="plate" name="plate" required maxlength="20">
             </div>
             <div class="form-row">
               <div class="form-group">
                 <label for="make">Make *</label>
-                <input type="text" id="make" name="make" required>
+                <input type="text" id="make" name="make" required maxlength="100">
               </div>
               <div class="form-group">
                 <label for="model">Model *</label>
-                <input type="text" id="model" name="model" required>
+                <input type="text" id="model" name="model" required maxlength="100">
               </div>
               <div class="form-group">
                 <label for="year">Year *</label>
-                <input type="text" id="year" name="year" required>
+                <input type="number" id="year" name="year" required
+                       min="1900" max="2025" step="1">
               </div>
             </div>
             <div class="form-group">
               <label for="odometer">Odometer Reading * <small>(approx.)</small></label>
-              <input type="text" id="odometer" name="odometer" required>
+              <input type="number" id="odometer" name="odometer" required
+                     min="0" max="1000000" step="1">
             </div>
             <div class="form-actions">
               <button type="reset">Clear</button>
@@ -130,6 +127,33 @@
       </address>
     </div>
   </footer>
+
+  <script>
+    (function() {
+      const form = document.querySelector('#booking form');
+      form.addEventListener('submit', function(e) {
+        const year = parseInt(form.year.value, 10);
+        const odometer = parseInt(form.odometer.value, 10);
+        const currentYear = new Date().getFullYear();
+        const errors = [];
+
+        if (isNaN(year) || year < 1900 || year > currentYear) {
+          errors.push(`Year must be between 1900 and ${currentYear}.`);
+        }
+        if (isNaN(odometer) || odometer < 0 || odometer > 1000000) {
+          errors.push("Odometer must be between 0 and 1,000,000 km.");
+        }
+        if (!form.ServiceRepair.value) {
+          errors.push("Please select Service or Repair.");
+        }
+
+        if (errors.length) {
+          e.preventDefault();
+          alert(errors.join("\n"));
+        }
+      });
+    })();
+  </script>
 
 </body>
 </html>

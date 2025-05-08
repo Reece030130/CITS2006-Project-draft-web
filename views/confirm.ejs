@@ -7,36 +7,48 @@
 </head>
 <body>
   <header>
-    <h1>Booking Confirmed</h1>
+    <img src="image/vdub_logo.jpg" alt="V-Dub Logo" class="logo">
+    <nav>
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">About Us</a></li>
+        <li><a href="#service">Service</a></li>
+        <li><a href="#repairs">Repairs</a></li>
+        <li><a href="#parts">Parts</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
   </header>
 
-  <main style="padding:2rem; max-width:600px; margin:auto;">
-    <p>Thanks, <strong><%= name %></strong>! We’ve received your booking.</p>
-
-    <h2>Your Details</h2>
-    <ul>
-      <li><strong>Email:</strong> <%= email %></li>
-      <% if (company) { %>
-        <li><strong>Company:</strong> <%= company %></li>
-      <% } %>
-      <li><strong>Phone:</strong> <%= phone %></li>
-      <li><strong>Service / Repair:</strong> <%= ServiceRepair %></li>
-      <% if (message) { %>
-        <li><strong>Message:</strong> <%= message %></li>
-      <% } %>
-    </ul>
-
-    <h2>Vehicle Info</h2>
-    <ul>
-      <li><strong>Plate:</strong> <%= plate %></li>
-      <li><strong>Make:</strong> <%= make %></li>
-      <li><strong>Model:</strong> <%= model %></li>
-      <li><strong>Year:</strong> <%= year %></li>
-      <li><strong>Odometer:</strong> <%= odometer %> km</li>
-    </ul>
-
-    <p>We’ll reach out shortly to confirm your appointment.</p>
-    <p><a href="/">Back to Home</a></p>
-  </main>
+  <main>
+       <div class="confirm-container">
+          <p>Thanks, <strong><%= name %></strong>! We’ve received your booking.</p>
+          <h2>Your Details</h2>
+          <ul>
+            <li><strong>Email:</strong> <%= email %></li>
+            <% if (company) { %>
+              <li><strong>Company:</strong> <%= company %></li>
+            <% } %>
+            <li><strong>Phone:</strong> <%= phone %></li>
+            <li><strong>Service / Repair:</strong> <%= ServiceRepair %></li>
+            <% if (message) { %>
+              <li><strong>Message:</strong> <%= message %></li>
+            <% } %>
+          </ul>
+    
+          <h2>Vehicle Info</h2>
+          <ul>
+            <li><strong>Plate:</strong> <%= plate %></li>
+            <li><strong>Make:</strong> <%= make %></li>
+            <li><strong>Model:</strong> <%= model %></li>
+            <li><strong>Year:</strong> <%= year %></li>
+            <li><strong>Odometer:</strong> <%= odometer %> km</li>
+          </ul>
+    
+          <p>We’ll reach out shortly to confirm your appointment.</p>
+          <p><a href="/">Back to Home</a></p>
+       </div>
+      </main>
+    
 </body>
 </html>
