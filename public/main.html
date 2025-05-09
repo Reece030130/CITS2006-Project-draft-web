@@ -2,14 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>V-Dub Repairs &amp; Spares</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <!-- reCAPTCHA API -->
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
 
   <header>
-    <img src="image/vdub_logo.jpg" alt="V-Dub Logo" class="logo">
+    <img src="/image/vdub_logo.jpg" alt="V-Dub Logo" class="logo">
     <nav>
       <ul>
         <li><a href="#home">Home</a></li>
@@ -24,44 +26,47 @@
 
   <main id="home">
     <div class="intro-booking-container">
-      <!-- Intro Board on the left -->
+      <!-- Left: Intro Board -->
       <section id="intro-board" class="intro-board">
         <h2>Quality Service</h2>
-        <p>V-Dub Repairs &amp; Spares was established in 1990 and has been providing superior vehicle services since.</p>
-        <p>For everything from basic and log book servicing, through to a full mechanical restoration.</p>
-        <p>We pride ourselves in providing a friendly experience, competitive price, excellent workmanship, personalised service, all with a 12 month warranty on labour and new parts.</p>
+        <p>Established 1990, V-Dub Repairs &amp; Spares delivers superior vehicle service with a 12-month warranty on labour & parts.</p>
         <h3>About Us</h3>
-        <p>V-Dub Repairs &amp; Spares is located in Fremantle, near bus and train services and several cafés just a short stroll away – enjoy beautiful Fremantle while you wait.</p>
+        <p>Conveniently located in Fremantle near public transport and cafés—enjoy your wait!</p>
         <div class="image-container-under-intro">
-          <img src="image/sub1.jpg" alt="V-Dub Repairs" class="intro-image">
-          <img src="image/sub2.jpg" alt="V-Dub Repairs" class="intro-image">
-          <img src="image/sub3.jpg" alt="V-Dub Repairs" class="intro-image">
+          <img src="/image/sub1.jpg" alt="Workshop" class="intro-image">
+          <img src="/image/sub2.jpg" alt="Mechanic" class="intro-image">
+          <img src="/image/sub3.jpg" alt="Tools" class="intro-image">
         </div>
       </section>
-      
-      <!-- Booking Form on the right -->
+
+      <!-- Right: Booking Form -->
       <div class="booking-container">
-        <section id="booking" class="booking-form">
+        <section class="booking-form">
           <h2>Book a Service</h2>
-          <form action="/book" method="post" novalidate>
+          <form id="bookingForm" action="/book" method="post" novalidate>
+            <!-- Name -->
             <div class="form-group">
               <label for="name">Name *</label>
               <input type="text" id="name" name="name"
                      required minlength="2" maxlength="100">
             </div>
+            <!-- Email -->
             <div class="form-group">
               <label for="email">Email *</label>
               <input type="email" id="email" name="email" required>
             </div>
+            <!-- Company -->
             <div class="form-group">
               <label for="company">Company</label>
               <input type="text" id="company" name="company" maxlength="200">
             </div>
+            <!-- Phone -->
             <div class="form-group">
               <label for="phone">Phone / Mobile *</label>
               <input type="tel" id="phone" name="phone" required
                      pattern="[0-9+\-\s]{7,20}">
             </div>
+            <!-- Service/Repair -->
             <fieldset>
               <legend>Service or Repair *</legend>
               <div>
@@ -70,17 +75,20 @@
               </div>
               <div>
                 <input type="radio" id="repair" name="ServiceRepair" value="repair">
-                <label for="repair">Repair (details below)</label>
+                <label for="repair">Repair</label>
               </div>
             </fieldset>
+            <!-- Message -->
             <div class="form-group">
               <label for="message">Message</label>
               <textarea id="message" name="message" rows="4" maxlength="500"></textarea>
             </div>
+            <!-- Licence Plate -->
             <div class="form-group">
               <label for="plate">Licence Plate *</label>
               <input type="text" id="plate" name="plate" required maxlength="20">
             </div>
+            <!-- Make/Model/Year -->
             <div class="form-row">
               <div class="form-group">
                 <label for="make">Make *</label>
@@ -96,14 +104,24 @@
                        min="1900" max="2025" step="1">
               </div>
             </div>
+            <!-- Odometer -->
             <div class="form-group">
               <label for="odometer">Odometer Reading * <small>(approx.)</small></label>
               <input type="number" id="odometer" name="odometer" required
                      min="0" max="1000000" step="1">
             </div>
+            <!-- reCAPTCHA widget -->
+            <div class="form-group">
+              <div class="g-recaptcha"
+                   data-sitekey="6LcNTzMrAAAAAEOwwcAhGzQD7bgeHf5mA9_Vzrjj"
+                   data-callback="onCaptchaSuccess"
+                   data-expired-callback="onCaptchaExpired">
+              </div>
+            </div>
+            <!-- Submit -->
             <div class="form-actions">
               <button type="reset">Clear</button>
-              <button type="submit">Send Booking</button>
+              <button type="submit" id="submitBtn" onclick="check()" disabled>Send Booking</button>
             </div>
           </form>
         </section>
@@ -129,8 +147,20 @@
   </footer>
 
   <script>
+    // Client-side field validation & recaptcha control
     (function() {
-      const form = document.querySelector('#booking form');
+      const form = document.getElementById('bookingForm');
+      const submitBtn = document.getElementById('submitBtn');
+
+      // reCAPTCHA callbacks
+      window.onCaptchaSuccess = function() {
+        submitBtn.disabled = false;
+      };
+      window.onCaptchaExpired = function() {
+        submitBtn.disabled = true;
+      };
+
+      // Prevent accidental submit if captcha missing or other errors
       form.addEventListener('submit', function(e) {
         const year = parseInt(form.year.value, 10);
         const odometer = parseInt(form.odometer.value, 10);
@@ -145,6 +175,12 @@
         }
         if (!form.ServiceRepair.value) {
           errors.push("Please select Service or Repair.");
+        }
+        // Check captcha token
+        const captcha = document.querySelector('[name="g-recaptcha-response"]').value;
+        if (!captcha) {
+          errors.push("Please complete the CAPTCHA.");
+          submitBtn.disabled = true;
         }
 
         if (errors.length) {
