@@ -1,18 +1,139 @@
 // app.js
 require('dotenv').config();
-const express            = require('express');
-const path               = require('path');
-const mysql              = require('mysql2/promise');
-const axios              = require('axios');
-const rateLimit          = require('express-rate-limit');
-const slowDown           = require('express-slow-down');
+const express   = require('express');
+const helmet    = require('helmet');
+const session   = require('express-session');
+const morgan    = require('morgan');
+const { createLogger, transports, format } = require('winston');
+const rateLimit = require('express-rate-limit');
+const slowDown  = require('express-slow-down');
+const axios     = require('axios');
+const path      = require('path');
+const fs        = require('fs');
+const https     = require('https');
+const mysql     = require('mysql2/promise');
 const { body, validationResult } = require('express-validator');
+
 
 const app = express();
 
+
+const logger = createLogger({
+  level: 'info',
+  format: format.combine(
+    format.timestamp(),
+    format.json()
+  ),
+  transports: [ new transports.Console() ]
+});
+app.use(morgan('combined', { stream: { write: s => logger.info(s.trim()) } }));
+
+// ─── BASIC FIREWALL MIDDLEWARE ──────────────────────────────────────────
+// Reads environment variables in .env, e.g.
+//   WHITELIST_IPS=127.0.0.1,::1
+//   BLACKLIST_IPS=203.0.113.5,198.51.100.0/24
+const { whitelist, blacklist } = (() => {
+  const wl = process.env.WHITELIST_IPS
+    ? process.env.WHITELIST_IPS.split(',').map(s => s.trim())
+    : [];
+  const bl = process.env.BLACKLIST_IPS
+    ? process.env.BLACKLIST_IPS.split(',').map(s => s.trim())
+    : [];
+  return { whitelist: wl, blacklist: bl };
+})();
+
+// Optional: if you need CIDR matching, install ip-range-check:
+//    npm install ip-range-check
+let ipRangeCheck;
+try {
+  ipRangeCheck = require('ip-range-check');
+} catch (_) { /* no CIDR support */ }
+
+app.use((req, res, next) => {
+  const clientIP = req.ip;
+
+  // 1) BLOCKLIST takes priority
+  if (blacklist.length) {
+    const isBlocked = blacklist.some(block => {
+      if (ipRangeCheck) {
+        return ipRangeCheck(clientIP, block);
+      }
+      return block === clientIP;
+    });
+    if (isBlocked) {
+      return res.status(403).send('Forbidden: Your IP is blocked.');
+    }
+  }
+
+  // 2) If a WHITELIST is defined, only allow those
+  if (whitelist.length) {
+    const isAllowed = whitelist.some(allow => {
+      if (ipRangeCheck) {
+        return ipRangeCheck(clientIP, allow);
+      }
+      return allow === clientIP;
+    });
+    if (!isAllowed) {
+      return res.status(403).send('Forbidden: Your IP is not on the whitelist.');
+    }
+  }
+
+  // Otherwise, pass through
+  next();
+});
+// sets HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, etc.
+// Hide X-Powered-By
+app.use(helmet.hidePoweredBy());
+
+// Prevent clickjacking
+app.use(helmet.frameguard({ action: 'deny' }));
+
+// Prevent MIME-type sniffing
+app.use(helmet.noSniff());
+
+// Enable HSTS (must be HTTPS-protected)
+app.use(helmet.hsts({
+  maxAge: 60 * 60 * 24 * 365,    // 1 year
+  includeSubDomains: true,
+  preload: true
+}));
+
+// Basic Referrer-Policy
+app.use(helmet.referrerPolicy({ policy: 'no-referrer' }));
+
+// Disable DNS prefetching
+app.use(helmet.dnsPrefetchControl({ allow: false }));
+
+// XSS filter (legacy IE support)
+app.use(helmet.xssFilter());
+
+// You can still add CSP later if needed:
+// app.use(helmet.contentSecurityPolicy({ directives: { defaultSrc: ["'self'"], /* ... */ } }));
 // trust proxy so X-Forwarded-For works
 app.set('trust proxy', true);
-
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    // req.secure is true when the request was via HTTPS
+    // X-Forwarded-Proto header check in case you're behind certain proxies
+    if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
+      return next();
+    }
+    // otherwise redirect to same URL but with https
+    return res.redirect(301, `https://${req.headers.host}${req.originalUrl}`);
+  });
+}
+app.use(session({
+  name: 'sid',                                  // your cookie name
+  secret: process.env.SESSION_SECRET,           // use a strong random value in .env
+  resave: false,                                // don’t save unchanged sessions
+  saveUninitialized: false,                     // only save sessions when set
+  cookie: {
+    httpOnly: true,                             // JS on the client can’t read the cookie
+    secure: process.env.NODE_ENV === 'production', // only send over HTTPS in prod
+    sameSite: 'lax',                            // CSRF mitigation—ok for most form posts
+    maxAge: 24 * 60 * 60 * 1000                 // e.g. 1 day in milliseconds
+  }
+}));
 // ─── ENV FLAG ─────────────────────────────────────────────────────────────
 const isTestEnv = process.env.NODE_ENV === 'test';
 
@@ -41,7 +162,10 @@ const pool = mysql.createPool({
 const speedLimiter = slowDown({
   windowMs: 60*1000,   // 1 minute
   delayAfter: 5,       // allow 5 requests per IP
-  delayMs:    500      // then add 500ms per request
+  delayMs: (used, req) => {
+    const delayAfter = req.slowDown.limit;
+    return (used - delayAfter) * 500;
+},      // then add 500ms per request
 });
 
 const bookingLimiter = rateLimit({
@@ -148,7 +272,7 @@ app.post(
 // global error handler
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(500).send('❗️ Sorry, something went wrong on our end.');
+  res.status(500).send('Sorry, something went wrong on our end.');
 });
 
 // start server

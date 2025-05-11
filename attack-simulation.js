@@ -2,7 +2,7 @@
 const axios = require('axios');
 
 // point at your local server
-const client = axios.create({ baseURL: 'http://localhost:2077', timeout: 5000 });
+const client = axios.create({ baseURL: 'http://localhost:3000', timeout: 5000 });
 
 // a minimal valid payload (matches your express-validator rules)
 const payload = new URLSearchParams({
